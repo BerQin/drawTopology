@@ -6,7 +6,7 @@
 <p>画布中鼠标滚轮放大缩小，点击空白处拖拽画布，菜单编辑，菜单回调函数编辑，可设置箭头是否显示，连线点方向和目标点方向等</p>
 <p>并预留了一些图的编辑方法</p>
 <p></p>
-<p>请查看DOM页面：<a href="https://berqin.github.io/drawTopology/">https://berqin.github.io/drawTopology/</a></p>
+<p>请查看DOM页面：<a href="https://berqin.github.io/drawTopology/" target="_blank" >https://berqin.github.io/drawTopology/</a></p>
 
 ## 快速上手
 
