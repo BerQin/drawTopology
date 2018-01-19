@@ -147,7 +147,7 @@
           triggerObj=null,
           startObjX=null,
           startObjY=null,
-          startTranslate={},
+          startTranslate=null,
           wheelDelta={x:0,y:0},
           timmer=null,
           lastObj=null,
@@ -168,13 +168,17 @@
           }
           e.preventDefault();
         }
-        addEvent('scroll', document, documentScroll);
+        // addEvent('scroll', document, documentScroll);
         addEvent('mousedown', this.canvas, canvasmousedown);
         addEvent('mouseup', this.canvas, canvasmouseup);
         addEvent('mousemove', this.canvas, canvasmousemove);
         addEvent('contextmenu',this.canvas,canvasmenu);
         addEvent('click',this.Menu,menuEvent);
-        addEvent('mousewheel',this.canvas,canvasmousewheel);
+        if(this.detectionBrowser()=='FIREFOX'){
+          addEvent('DOMMouseScroll',this.canvas,canvasmousewheel);
+        }else{
+          addEvent('mousewheel',this.canvas,canvasmousewheel);
+        }
         this.viewConfig.resize=this.viewConfig.resize||true;
         this.viewConfig.resize&&addEvent('resize',window,viewResize);
         function menuEvent(e){
@@ -200,7 +204,8 @@
           e.stopPropagation();
           e.preventDefault();
           var windowscroll=_this.scroll(_this.canvas);
-          if(e.wheelDelta<0){
+          var detail=e.wheelDelta?e.wheelDelta:-(e.detail);
+          if(detail<0){
             _this.scale.x/=1.1;
             _this.scale.y/=1.1;
             _this.scale.x=_this.scale.x<0.3?0.3:_this.scale.x;
@@ -238,7 +243,7 @@
               item.id=id;
               a.innerHTML=item.name;
               a.className=item.className;
-              _this.Menu.append(a);
+              _this.Menu.appendChild(a);
             });
             _this.HTMLshow(e,_this.Menu);
           }
@@ -287,6 +292,9 @@
               case 'rect':
                 isInGraphJson.obj.setLocation((e.x-startX)/_this.scale.x+startObjX, (e.y -startY)/_this.scale.y+startObjY);
                 break;
+              case 'rhombus':
+                isInGraphJson.obj.setLocation((e.x-startX)/_this.scale.x+startObjX, (e.y -startY)/_this.scale.y+startObjY);
+                break;
               case 'linkPoints':
                 _this.drawChild();
                 var windowscroll = _this.scroll(_this.canvas);
@@ -321,12 +329,101 @@
                   break;
                 }
                 path2d.moveTo(spotA.x, spotA.y);
-                if (json.type == 'rect') {
+                function rectaddLine(){
                   if(typeof(isInGraphJson.obj.LinePoint.PointTo[isInGraphJson.Path.type])=='string'){
-                    moveLineobj = json.obj
-                    if(moveLineobj.rPath2d.length) return;
-                    if(typeof(isInGraphJson.obj.LinePoint.place[isInGraphJson.Path.type])!='boolean') linkPoints.frompath=isInGraphJson.Path;
-                    switch(isInGraphJson.obj.LinePoint.PointTo[isInGraphJson.Path.type]){
+                      moveLineobj = json.obj;
+                      if(typeof(isInGraphJson.obj.LinePoint.place[isInGraphJson.Path.type])!='boolean'||(typeof(moveLineobj.LinePoint.RLinkPoint[isInGraphJson.obj.LinePoint.PointTo[isInGraphJson.Path.type]])=='object'&&moveLineobj.LinePoint.RLinkPoint[isInGraphJson.obj.LinePoint.PointTo[isInGraphJson.Path.type]].length)) linkPoints.frompath=isInGraphJson.Path;
+                      var examineRLJ=_this.examineRLinkPoint(isInGraphJson.obj.linkTo,moveLineobj);
+                      if(examineRLJ.pass){
+                        if(examineRLJ.rPath[examineRLJ.index]){
+                          linkPoints.topath=examineRLJ.rPath[examineRLJ.index];
+                          linkPoints.totype=isInGraphJson.obj.LinePoint.PointTo[isInGraphJson.Path.type];
+                          switch(isInGraphJson.obj.LinePoint.PointTo[isInGraphJson.Path.type]){
+                            case 'left':
+                              spotC.x = linkPoints.topath.x - 40;
+                              spotD.x = spotC.x + 40;
+                              spotD.y = linkPoints.topath.y;
+                              spotC.y = spotD.y;
+                            break;
+                            case 'right':
+                              spotC.x = linkPoints.topath.x + 40;
+                              spotD.x = spotC.x - 40;
+                              spotD.y = linkPoints.topath.y;
+                              spotC.y = spotD.y;
+                            break;
+                            case 'top':
+                              spotC.x = linkPoints.topath.x;
+                              spotD.x = spotC.x;
+                              spotD.y = linkPoints.topath.y;
+                              spotC.y = spotD.y - 40;
+                            break;
+                            case 'bottom':
+                              spotC.x = linkPoints.topath.x;
+                              spotD.x = spotC.x;
+                              spotD.y = linkPoints.topath.y;
+                              spotC.y = spotD.y + 40;
+                            break;
+                          }
+                        }else{
+                          return false;
+                        }
+                      }else{
+                        switch(isInGraphJson.obj.LinePoint.PointTo[isInGraphJson.Path.type]){
+                          case 'left':
+                            spotC.x = moveLineobj.x - 40;
+                            spotD.x = spotC.x + 40;
+                            spotD.y = moveLineobj.y + moveLineobj.lineWidth + moveLineobj.height/2;
+                            spotC.y = spotD.y;
+                          break;
+                          case 'right':
+                            spotC.x = moveLineobj.x + moveLineobj.lineWidth*2 + moveLineobj.width + 40;
+                            spotD.x = spotC.x - 40;
+                            spotD.y = moveLineobj.y + moveLineobj.lineWidth + moveLineobj.height/2;
+                            spotC.y = spotD.y;
+                          break;
+                          case 'top':
+                            spotC.x = moveLineobj.x + moveLineobj.lineWidth + moveLineobj.width / 2;
+                            spotD.x = spotC.x;
+                            spotD.y = moveLineobj.y;
+                            spotC.y = spotD.y - 40;
+                          break;
+                          case 'bottom':
+                            spotC.x = moveLineobj.x + moveLineobj.lineWidth + moveLineobj.width / 2;
+                            spotD.x = spotC.x;
+                            spotD.y = moveLineobj.y + moveLineobj.lineWidth * 2 + moveLineobj.height;
+                            spotC.y = spotD.y + 40;
+                          break;
+                        }
+                      }
+                      path2d.bezierCurveTo(spotB.x, spotB.y, spotC.x, spotC.y, spotD.x, spotD.y);
+                    }
+                }
+                switch(json.type){
+                  case 'rect':
+                    rectaddLine();
+                    break;
+                  case 'rhombus':
+                    rectaddLine();
+                    break;
+                  case 'rLinkPoints':
+                    moveLineobj = json.obj;
+                    if(typeof(isInGraphJson.obj.LinePoint.PointTo[isInGraphJson.Path.type])=='string') return false;
+                    var goid=isInGraphJson.obj.LinePoint.PointTo[isInGraphJson.Path.type].way[isInGraphJson.Path.id];
+                    if(typeof(goid)=='object'){
+                      var passblean=false;
+                      for(var i = 0 ; i<goid.length; i++){
+                        if(goid[i]==json.Path.id){
+                          passblean=true;
+                        }
+                      }
+                      if(!passblean) return false;
+                    }else{
+                      if(json.Path.id!=goid) return false;
+                    }
+                    linkPoints.frompath=isInGraphJson.Path;
+                    linkPoints.topath=json.Path;
+                    linkPoints.totype=isInGraphJson.obj.LinePoint.PointTo[isInGraphJson.Path.type].direction;
+                    switch(isInGraphJson.obj.LinePoint.PointTo[isInGraphJson.Path.type].direction){
                       case 'left':
                         spotC.x = moveLineobj.x - 40;
                         spotD.x = spotC.x + 40;
@@ -340,100 +437,55 @@
                         spotC.y = spotD.y;
                       break;
                       case 'top':
-                        spotC.x = moveLineobj.x + moveLineobj.lineWidth + moveLineobj.width / 2;
+                        spotC.x = linkPoints.topath.x;
                         spotD.x = spotC.x;
                         spotD.y = moveLineobj.y;
                         spotC.y = spotD.y - 40;
                       break;
                       case 'bottom':
-                        spotC.x = moveLineobj.x + moveLineobj.lineWidth + moveLineobj.width / 2;
+                        spotC.x = linkPoints.topath.x;
                         spotD.x = spotC.x;
                         spotD.y = moveLineobj.y + moveLineobj.lineWidth * 2 + moveLineobj.height;
                         spotC.y = spotD.y + 40;
                       break;
                     }
                     path2d.bezierCurveTo(spotB.x, spotB.y, spotC.x, spotC.y, spotD.x, spotD.y);
-                  }
-                }else if(json.type == 'rLinkPoints'){
-                  moveLineobj = json.obj;
-                  if(typeof(isInGraphJson.obj.LinePoint.PointTo[isInGraphJson.Path.type])=='string') return false;
-                  var goid=isInGraphJson.obj.LinePoint.PointTo[isInGraphJson.Path.type].way[isInGraphJson.Path.id];
-                  if(typeof(goid)=='object'){
-                    var passblean=false;
-                    for(var i = 0 ; i<goid.length; i++){
-                      if(goid[i]==json.Path.id){
-                        passblean=true;
-                      }
+                    break;
+                  default:
+                    moveLineobj = null;
+                    switch(isInGraphJson.Path.type){
+                      case 'left':
+                        spotC.x = (to.x-startX)/_this.scale.x+startObjX+40;
+                        spotD.x = spotC.x-40;
+                        spotD.y = (to.y-startY)/_this.scale.y+startObjY+isInGraphJson.obj.lineWidth*2 + (isInGraphJson.Path.y-isInGraphJson.obj.y);
+                        spotC.y = spotD.y;
+                      break;
+                      case 'right':
+                        spotC.x = (to.x-startX)/_this.scale.x+startObjX+isInGraphJson.obj.lineWidth*2 + isInGraphJson.obj.width-40;
+                        spotD.x = spotC.x+40;
+                        spotD.y = (to.y-startY)/_this.scale.y+startObjY+isInGraphJson.obj.lineWidth*2 + (isInGraphJson.Path.y-isInGraphJson.obj.y);
+                        spotC.y = spotD.y;
+                      break;
+                      case 'top':
+                        spotC.x = (to.x-startX)/_this.scale.x+startObjX+isInGraphJson.obj.lineWidth + (isInGraphJson.Path.x-isInGraphJson.obj.x);
+                        spotD.x = spotC.x;
+                        spotD.y = (to.y-startY)/_this.scale.y+startObjY;
+                        spotC.y = spotD.y + 40;
+                      break;
+                      case 'bottom':
+                        spotC.x = (to.x-startX)/_this.scale.x+startObjX+isInGraphJson.obj.lineWidth + (isInGraphJson.Path.x-isInGraphJson.obj.x);
+                        spotD.x = spotC.x;
+                        spotD.y = (to.y-startY)/_this.scale.y+startObjY+isInGraphJson.obj.lineWidth*2 + isInGraphJson.obj.height;
+                        spotC.y = spotD.y - 40;
+                      break;
                     }
-                    if(!passblean) return false;
-                  }else{
-                    if(json.Path.id!=goid) return false;
+                    path2d.bezierCurveTo(spotB.x, spotB.y, spotC.x, spotC.y, spotD.x, spotD.y);
                   }
-                  linkPoints.frompath=isInGraphJson.Path;
-                  linkPoints.topath=json.Path;
-                  linkPoints.totype=isInGraphJson.obj.LinePoint.PointTo[isInGraphJson.Path.type].direction;
-                  switch(isInGraphJson.obj.LinePoint.PointTo[isInGraphJson.Path.type].direction){
-                    case 'left':
-                      spotC.x = moveLineobj.x - 40;
-                      spotD.x = spotC.x + 40;
-                      spotD.y = moveLineobj.y + moveLineobj.lineWidth + moveLineobj.height/2;
-                      spotC.y = spotD.y;
-                    break;
-                    case 'right':
-                      spotC.x = moveLineobj.x + moveLineobj.lineWidth*2 + moveLineobj.width + 40;
-                      spotD.x = spotC.x - 40;
-                      spotD.y = moveLineobj.y + moveLineobj.lineWidth + moveLineobj.height/2;
-                      spotC.y = spotD.y;
-                    break;
-                    case 'top':
-                      spotC.x = linkPoints.topath.x;
-                      spotD.x = spotC.x;
-                      spotD.y = moveLineobj.y;
-                      spotC.y = spotD.y - 40;
-                    break;
-                    case 'bottom':
-                      spotC.x = linkPoints.topath.x;
-                      spotD.x = spotC.x;
-                      spotD.y = moveLineobj.y + moveLineobj.lineWidth * 2 + moveLineobj.height;
-                      spotC.y = spotD.y + 40;
-                    break;
-                  }
-                  path2d.bezierCurveTo(spotB.x, spotB.y, spotC.x, spotC.y, spotD.x, spotD.y);
-                } else {
-                  moveLineobj = null;
-                  switch(isInGraphJson.Path.type){
-                    case 'left':
-                      spotC.x = (to.x-startX)/_this.scale.x+startObjX+40;
-                      spotD.x = spotC.x-40;
-                      spotD.y = (to.y-startY)/_this.scale.y+startObjY+isInGraphJson.obj.lineWidth*2 + (isInGraphJson.Path.y-isInGraphJson.obj.y);
-                      spotC.y = spotD.y;
-                    break;
-                    case 'right':
-                      spotC.x = (to.x-startX)/_this.scale.x+startObjX+isInGraphJson.obj.lineWidth*2 + isInGraphJson.obj.width-40;
-                      spotD.x = spotC.x+40;
-                      spotD.y = (to.y-startY)/_this.scale.y+startObjY+isInGraphJson.obj.lineWidth*2 + (isInGraphJson.Path.y-isInGraphJson.obj.y);
-                      spotC.y = spotD.y;
-                    break;
-                    case 'top':
-                      spotC.x = (to.x-startX)/_this.scale.x+startObjX+isInGraphJson.obj.lineWidth + (isInGraphJson.Path.x-isInGraphJson.obj.x);
-                      spotD.x = spotC.x;
-                      spotD.y = (to.y-startY)/_this.scale.y+startObjY;
-                      spotC.y = spotD.y + 40;
-                    break;
-                    case 'bottom':
-                      spotC.x = (to.x-startX)/_this.scale.x+startObjX+isInGraphJson.obj.lineWidth + (isInGraphJson.Path.x-isInGraphJson.obj.x);
-                      spotD.x = spotC.x;
-                      spotD.y = (to.y-startY)/_this.scale.y+startObjY+isInGraphJson.obj.lineWidth*2 + isInGraphJson.obj.height;
-                      spotC.y = spotD.y - 40;
-                    break;
-                  }
-                  path2d.bezierCurveTo(spotB.x, spotB.y, spotC.x, spotC.y, spotD.x, spotD.y);
-                }
-                _this.context.stroke(path2d);
-                path2d.closePath();
-                var baseLineB = _this.PointOnCubicBezier([spotA, spotB, spotC, spotD], 0.5);
-                var baseLineA = _this.PointOnCubicBezier([spotA, spotB, spotC, spotD], 0.4);
-                isInGraphJson.obj.LinePoint.link.arrows.show&&_this.drawArrow(baseLineA.x, baseLineA.y, baseLineB.x, baseLineB.y, isInGraphJson.obj.strokeStyle, isInGraphJson.obj.lineWidth);
+                  _this.context.stroke(path2d);
+                  path2d.closePath();
+                  var baseLineB = _this.PointOnCubicBezier([spotA, spotB, spotC, spotD], 0.5);
+                  var baseLineA = _this.PointOnCubicBezier([spotA, spotB, spotC, spotD], 0.4);
+                  isInGraphJson.obj.LinePoint.link.arrows.show&&_this.drawArrow(baseLineA.x, baseLineA.y, baseLineB.x, baseLineB.y, isInGraphJson.obj.strokeStyle, isInGraphJson.obj.lineWidth);
                 break;
               case 'line':
 
@@ -463,6 +515,9 @@
                 case 'rect':
                   _this.canvas.style.cursor = "pointer";
                   break;
+                case 'rhombus':
+                  _this.canvas.style.cursor = "pointer";
+                  break;
                 case 'line':
                   _this.canvas.style.cursor = "pointer";
                   lastLink = json.obj;
@@ -482,8 +537,8 @@
                     var span2=document.createElement('span');
                     span2.className='drawTop-title-text';
                     span2.innerHTML=json.obj.text;
-                    _this.Title.append(span);
-                    _this.Title.append(span2);
+                    _this.Title.appendChild(span);
+                    _this.Title.appendChild(span2);
                   }else{
                     _this.Title.innerHTML='从  '+json.obj.from.centerText+''+json.obj.from.text+'  到  '+json.obj.to.centerText+''+json.obj.to.text+'   的连线';
                   }
@@ -537,6 +592,7 @@
               _this.add(link);
             }
             moveLineobj = null;
+            linkPoints = {};
           }
           if (isMousDown && isClick && (!idDblclick)) {
             canvasClick(e, isInGraphJson.obj);
@@ -591,6 +647,32 @@
         function canvasClick(e, json) {
           e.type = 'click';
           json && json['click'] && json['click'](e);
+        }
+      },
+      examineRLinkPoint:function(link,toObj){
+        var result={pass:false};
+        if(toObj.rPath2d.length){
+          if(link.length<toObj.rPath2d.length) result.pass=true;
+        }else{
+          result.pass=false;
+        }
+        result.index=link.length;
+        result.rPath=toObj.rPath2d;
+        return result;
+      },
+      detectionBrowser:function(){
+        if(navigator.userAgent.toUpperCase().indexOf("MSIE")==-1){
+          if(navigator.userAgent.toUpperCase().indexOf("FIREFOX")==-1){
+            if(navigator.userAgent.toUpperCase().indexOf("CHROME")==-1){
+
+            }else{
+              return 'CHROME';
+            }
+          }else{
+            return 'FIREFOX';
+          }
+        }else{
+          return 'IE';
         }
       },
       offSet: function(obj) {
@@ -675,6 +757,20 @@
         result.y = (ay * tCubed) + (by * tSquared) + (cy * t) + spotArr[0].y;
         return result;
       },
+      getAutoHeight: function(node){
+        node.textMaxWidth = node.textMaxWidth || node.width;
+        node.textSize = node.textSize || 12;
+        var rw = node.textMaxWidth / (node.textSize * 0.5);
+        var title = node.centerText;
+        for (var i = 1; this.getTrueLength(title) > 0; i++) {
+          var tlittle = this.cutString(title, rw);
+          title.substr(0, tlittle).replace(/^\s+|\s+$/, "");
+          title = title.substr(tlittle);
+          if(this.getTrueLength(title) == 0 && (i-1)>0 ){
+            node.height = ( i * 1.3 + 1 ) * node.textSize;
+          }
+        }
+      },
       drawChild: function() {
         this.context.setTransform(this.scale.x, 0, 0, this.scale.y, this.origin.x,this.origin.y);
         this.context.translate(this.translate.x,this.translate.y);
@@ -686,6 +782,7 @@
           });
           val.parentStages.push(_this);
           if(val.type!='line'){
+            _this.getAutoHeight(val);
             val.path2d = new Path2D();
             _this.context.save(val.path2d);
             _this.context.beginPath(val.path2d);
@@ -694,7 +791,15 @@
             _this.context.strokeStyle = val.strokeStyle;
             switch (val.type) {
               case 'rhombus':
-                val.path2d.rect(val.x + val.lineWidth, val.y + val.lineWidth, val.width, val.height);
+                val.path2d.moveTo(val.x+val.radius.p1+val.lineWidth,val.y+val.lineWidth);
+                val.path2d.lineTo(val.x+val.width-val.radius.p2+val.lineWidth,val.y+val.lineWidth);
+                val.path2d.arcTo(val.x+val.width+val.lineWidth,val.y+val.lineWidth,val.x+val.width+val.lineWidth,val.y+val.radius.p2+val.lineWidth,val.radius.p2);
+                val.path2d.lineTo(val.x+val.width+val.lineWidth,val.y+val.height-val.radius.p3+val.lineWidth);
+                val.path2d.arcTo(val.x+val.width+val.lineWidth,val.y+val.height+val.lineWidth,val.x+val.width-val.radius.p3+val.lineWidth,val.y+val.height+val.lineWidth,val.radius.p3);
+                val.path2d.lineTo(val.x+val.radius.p4+val.lineWidth,val.y+val.height+val.lineWidth);
+                val.path2d.arcTo(val.x+val.lineWidth,val.y+val.height+val.lineWidth,val.x+val.lineWidth,val.y-val.radius.p4+val.lineWidth,val.radius.p4);
+                val.path2d.lineTo(val.x+val.lineWidth,val.y+val.radius.p1+val.lineWidth);
+                val.path2d.arcTo(val.x+val.lineWidth,val.y+val.lineWidth,val.x+val.radius.p1+val.lineWidth,val.y+val.lineWidth,val.radius.p1);
                 break;
               default:
                 val.path2d.rect(val.x + val.lineWidth, val.y + val.lineWidth, val.width, val.height);
@@ -802,7 +907,8 @@
                 break;
               }
               if(val.toPath){
-                switch(from.LinePoint.PointTo[type].direction){
+                var toType=from.LinePoint.PointTo[type].direction||val.lineStartPlace.totype;
+                switch(toType){
                   case 'left':
                     spotC.x = to.x - 40;
                     spotD.x = spotC.x + 40;
@@ -1120,67 +1226,78 @@
         });
         return isor;
       },
+      textFlashback: function(str){
+        var resault = [];
+        for(var len = str.length; len >= 0 ; len-- ){
+            resault.push(str[len]);
+        }
+        return resault.join('');
+      },
       drawText: function(node, path) {
         if (typeof(this.config.id)!='string'&&typeof(this.config.id)!='number') return false;
         // 绘制文字
-        node.textMaxWidth = node.textMaxWidth || node.width + 30;
-        node.textSize = node.textSize || 12;
         this.context.beginPath(path);
         this.context.fillStyle = node.centerTextColor;
         this.context.font = node.textSize + "px Arial,微软雅黑";
         this.context.textAlign = "center";
-        this.context.fillText(node.centerText, node.x + node.lineWidth + node.width / 2, node.y + node.height / 2 + node.textSize / 2);
+        var rw = node.textMaxWidth / (node.textSize * 0.5);
+        var title = node.centerText;
+        for (var i = 1; this.getTrueLength(title) > 0; i++) {
+          var tlittle = this.cutString(title, rw);
+          this.context.fillText(title.substr(0, tlittle).replace(/^\s+|\s+$/, ""), node.x + node.lineWidth + node.width / 2, node.y + ( i*1.3+0.4 ) * node.textSize);
+          title = title.substr(tlittle);
+        }
         // 标题下面的主要文字
         this.context.closePath();
         this.context.beginPath(path);
         this.context.fillStyle = node.textColor;
         this.context.font = node.textSize + "px Arial,微软雅黑";
         this.context.textAlign = "center";
-        var rw = node.textMaxWidth / (node.textSize * 0.5);
+        var textRw = (node.textMaxWidth + 30) / (node.textSize * 0.5);
         var text = node.text;
-        for (var i = 1; getTrueLength(text) > 0; i++) {
-          var tl = cutString(text, rw);
-          this.context.fillText(text.substr(0, tl).replace(/^\s+|\s+$/, ""), node.x + node.lineWidth + node.width / 2, node.y + node.height + 10 + i * node.textSize * 1.3);
+        for (var i = 1; this.getTrueLength(text) > 0; i++) {
+          var tl = this.cutString(text, textRw);
+          this.context.fillText(text.substr(0, tl).replace(/^\s+|\s+$/, ""), node.x + node.lineWidth + node.width / 2, node.y + node.height + ( i * 1.3 + 1 ) * node.textSize);
           text = text.substr(tl);
         }
         this.context.closePath();
-        //获取字符串的真实长度（字节长度）
-        function getTrueLength(str) {
-          var len = str.length,
-            truelen = 0;
-          for (var x = 0; x < len; x++) {
-            if (str.charCodeAt(x) > 128) {
-              truelen += 2;
+      },
+      //获取字符串的真实长度（字节长度）
+      getTrueLength: function(str) {
+        var len = str.length,
+          truelen = 0;
+        for (var x = 0; x < len; x++) {
+          if (str.charCodeAt(x) > 128) {
+            truelen += 2;
+          } else {
+            truelen += 1;
+          }
+        }
+        return truelen;
+      },
+      //按字节长度截取字符串，返回substr截取位置
+      cutString: function(str, leng) {
+        var len = str.length,
+          tlen = len,
+          nlen = 0;
+        for (var x = 0; x < len; x++) {
+          if (str.charCodeAt(x) > 128) {
+            if (nlen + 2 < leng) {
+              nlen += 2;
             } else {
-              truelen += 1;
+              tlen = x;
+              break;
+            }
+          } else {
+            if (nlen + 1 < leng) {
+              nlen += 1;
+            } else {
+              tlen = x;
+              break;
             }
           }
-          return truelen;
         }
-        //按字节长度截取字符串，返回substr截取位置
-        function cutString(str, leng) {
-          var len = str.length,
-            tlen = len,
-            nlen = 0;
-          for (var x = 0; x < len; x++) {
-            if (str.charCodeAt(x) > 128) {
-              if (nlen + 2 < leng) {
-                nlen += 2;
-              } else {
-                tlen = x;
-                break;
-              }
-            } else {
-              if (nlen + 1 < leng) {
-                nlen += 1;
-              } else {
-                tlen = x;
-                break;
-              }
-            }
-          }
-          return tlen;
-        }
+        return tlen;
       },
       add: function(obj) {
         if (obj.length) {
@@ -1291,7 +1408,7 @@
               });
             }
             for(var i in val.config){
-              json.styles[i]=val.config[i];
+              json.styles[i]=json.styles[i]||val.config[i];
             }
             json.dataValue=val.dataValue;
             result.Node.push(json);
@@ -1398,6 +1515,11 @@
     this.LinePoint.link.arrows.show=(typeof(this.LinePoint.link.arrows.show)!='undefined'&&typeof(this.LinePoint.link.arrows.show)=='boolean')?this.LinePoint.link.arrows.show:true;
     this.LinePoint.RLinkPoint=this.LinePoint.RLinkPoint||{};
     this.rPath2d=[];
+    switch(this.type){
+      case 'rhombus':
+        this.radius=this.config.radius||{p1:4,p2:4,p3:4,p4:4};
+      break;
+    }
     // 路径连接点样式
     this.PathStyle={
       bottom:{},
@@ -1406,7 +1528,7 @@
       right:{}
     };
     // 自定义属性
-    this.dataValue={};
+    this.dataValue= this.config.dataValue || {};
     // 链接线属性
     this.arcPath2d=[];
     this.linkFrom = [];
@@ -1419,30 +1541,30 @@
     var changeWatch = ['width', 'height', 'text'];
     for (var i = 0; i < changeWatch.length; i++) { this['_' + changeWatch[i]] = this[changeWatch[i]]; }
     var WatchJson = {
-      'width': {
-        configurable: true,
-        enumerable: true,
-        get: function() {
-          return this._width;
-        },
-        set: function(val) {
-          this._width = val;
-          this.reload();
-          return this._width;
-        }
-      },
-      'height': {
-        configurable: true,
-        enumerable: true,
-        get: function() {
-          return this._height;
-        },
-        set: function(val) {
-          this._height = val;
-          this.reload();
-          return this._height;
-        }
-      },
+      // 'width': {
+      //   configurable: true,
+      //   enumerable: true,
+      //   get: function() {
+      //     return this._width;
+      //   },
+      //   set: function(val) {
+      //     this._width = val;
+      //     this.reload();
+      //     return this._width;
+      //   }
+      // },
+      // 'height': {
+      //   configurable: true,
+      //   enumerable: true,
+      //   get: function() {
+      //     return this._height;
+      //   },
+      //   set: function(val) {
+      //     this._height = val;
+      //     this.reload();
+      //     return this._height;
+      //   }
+      // },
       'text': {
         configurable: true,
         enumerable: true,
