@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>drawTopology 拓扑图插件</title>
+  <link rel="stylesheet" type="text/css" href="css/drawTopology.css">
+  <script type="text/javascript" src="js/drawTopology.js"></script>
+</head>
+<body>
+  <div id="canvasbox" class="canvasbox" style="width: 100%; min-height: 800px; height: 100%;"></div>
+</body>
+
+</html>
+<script type="text/javascript">
+  var Stage = new drawTop.Stage({
+    id:'canvasbox',
+    Menu:{
+      btn:{
+        line:[{
+          name:'删除直线',
+          className:'No_line',
+          click:function(e){
+            e.Stage.clear(e.triggerDrawNode);
+          }
+        }],
+        rect:[{
+          name:'删除标签',
+          className:'No_node',
+          click:function(e){
+            e.Stage.clear(e.triggerDrawNode);
+          }
+        },{
+          name:'查看详情',
+          className:'showInfo',
+          dataKay:'k',
+          click:function(e){
+            console.log(e);
+          }
+        }],
+        rhombus:[{
+          name:'删除标签',
+          className:'No_node',
+          click:function(e){
+            e.Stage.clear(e.triggerDrawNode);
+          }
+        },{
+          name:'查看详情',
+          className:'showInfo',
+          dataKay:'k',
+          click:function(e){
+            console.log(e);
+          }
+        }],
+      }
+    },
+    doLink:{
+      doLinkJudge:function(e){
+        console.log(e);
+        return true;
+      }
+    }
+  });
+  var node_arr = [];
+  var color=["#f9be00","#7ab51d","#9e0382","#0087ea","#01b2e4","#64e571","#d9d60b","#55198a","#942128","#90495a"];
+  for (var i = 0; i < 800; i++) {
+    var node_s = new drawTop.Node('Node'+i,{strokeStyle:color[i%10],id:i,fillStyle:color[i%10],centerTextColor:'#fff',width:60,
+  });
+    // node_s.setLocation(62*i,30*i);
+    node_s.setLocation(Math.random()*600,Math.random()*500);
+    node_arr.push(node_s);
+  }
+  for (var j = 0; j < 600; j++) {
+    var node_s = new drawTop.Link(node_arr[j],node_arr[j+1],{lineStrokeStyle:color[j%10],
+      arrows:{
+          show:true,
+      }
+    });
+    node_arr.push(node_s);
+  }
+  Stage.add(node_arr);
+  var node=new drawTop.Node({
+    centerText:'且',
+    text:' ',
+    width:120,
+    radius:{
+      p1:14,
+      p2:14,
+      p3:14,
+      p4:14
+    },
+    type:'rhombus',
+    height:28,
+    LinePoint:{
+      place:{
+        top:[{
+          id:1025,
+        },{
+          id:1035,
+        },{
+          id:1045,
+        },{
+          id:1055,
+        }],
+        bottom:[{
+          id:1035,
+        },{
+          id:1045,
+        }],
+      },
+      PointTo:{
+        bottom:{
+          direction:'top',
+          way:{
+            1025:1025,
+            1035:1045,
+            1045:1035
+          }
+        },
+        right:'bottom',
+        left:'right',
+        top:'top'
+      },
+      link:{
+        arrows:{
+            show:false,
+        }
+      }
+    }
+  });
+  // var node3=new drawTop.Node();
+  var node2=new drawTop.Node({
+    centerText:'或',
+    x:200,
+    y:100,
+    text:' ',
+    width:60,
+    height:30,
+    LinePoint:{
+       place:{
+        bottom:[{
+          id:1035,
+        },{
+          id:1045,
+        }],
+      },
+      RLinkPoint:{
+        top:[{
+          id:1025,
+        },{
+          id:1035,
+        },{
+          id:1045,
+        }],
+      }
+    }
+  });
+  node2.addEvent('dblclick',function(e){
+    console.log(e);
+  });
+  Stage.add([node,node2]);//node3
+  // Stage.add(node2);
+  var data=Stage.getNodeData();
+</script>

@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>drawTopology 拓扑图插件</title>
+  <link rel="stylesheet" type="text/css" href="css/drawTopology.css">
+  <link rel="stylesheet" type="text/css" href="css/index.css">
+  <script type="text/javascript" src="js/drawTopology.js"></script>
+</head>
+
+<body>
+  <div class="main-head" id="mainHead">
+    <header>DrawTopology 拓扑图插件</header>
+    <p>展示 文档</p>
+  </div>
+  <div class="main-content cl" id="mainContent">
+    <div class="row-left">
+      <ul class="list">
+        <li class="item-head">
+          <a href="#0">DrawTopology</a>
+        </li>
+        <a href="#1">
+          <li>绘图插件简介</li>
+        </a>
+        <a href="#2">
+          <li>快速上手</li>
+        </a>
+        <a href="#3">
+          <li>简单配置</li>
+        </a>
+      </ul>
+      <ul class="list">
+        <li class="item-head">
+          <a href="#9">Work Function</a>
+        </li>
+        <a href="#6">
+          <li>Array.Map(function:fn)</li>
+        </a>
+        <a href="#7">
+          <li>Array.Nrepetitive()</li>
+        </a>
+      </ul>
+      <ul class="list">
+        <li class="item-head">
+          <a href="#10">
+            DrawTopology API
+          </a>
+        </li>
+        <a href="#4">
+          <li>drawTop</li>
+        </a>
+        <a href="#5">
+          <li>drawTop.setTheme(Object: json)</li>
+        </a>
+      </ul>
+    </div>
+    <div class="row-right" id="rightScroll">
+      <div class="one">
+        <h1 id="0">示例：</h1>
+        <div id="canvasbox" class="canvasbox"></div>
+        <h2 id="1">绘图插件简介</h2>
+        <div class="text-content">
+          <p>Canvas 原生开发 简单上手</p>
+          <p>Node 的id是Node的唯一标识 必须唯一并且创建后不可被修改，需要在最开始的时候进行设置</p>
+          <h3>其他操作</h3>
+          <p>画布中鼠标滚轮放大缩小，点击空白处拖拽画布，菜单编辑，菜单回调函数编辑，可设置箭头是否显示，连线点方向和目标点方向等</p>
+          <p>并预留了一些图的编辑方法</p>
+        </div>
+        <h2 id="2">快速上手:</h2>
+        <div>
+          <p>HTML</p>
+          <pre class="code-html">
+            < link rel="stylesheet" type="text/css" href="css/drawTopology.css" >
+            < script type="text/javascript" src="js/drawTopology.js" >< /script >
+            < div id="canvasbox" class="canvasbox" style="height: 100%; width: 100%;">< /div>
+          </pre>
+          <p>JS</p>
+          <pre class="code-js">
+            var Stage = new drawTop.Stage({
+                  id:'canvasbox', //实例化一个舞台 传入ID字符串
+                  Menu:{          //对舞台中菜单进行配置
+                      btn:{          //菜单按钮
+                          line:[{           //线型菜单按钮
+                              name:'删除直线',                  //文字
+                              className:'No_line',              //css样式
+                              click:function(e){                 //事件
+                                e.Stage.clear(e.triggerDrawNode);
+                              }
+                          }],
+                          rect:[{
+                              name:'删除标签',
+                              className:'No_node',
+                              click:function(e){
+                                e.Stage.clear(e.triggerDrawNode);
+                              }
+                          },{
+                              name:'查看详情',
+                              className:'showInfo',
+                              click:function(e){
+                                console.log(e);
+                              }
+                          }],
+                        }
+                  },
+                  doLink:{
+                      doLinkJudge:function(e){        //链接前的验证必须返回true才能完成链接
+                          console.log(e);
+                          return true;
+                      }
+                  }
+                });
+            var node_arr = [];
+            for (var i = 0; i < 6; i++) {
+              var node_s = new drawTop.Node()      //实例化一个节点 （第一个参数是String类型 下标题文字 可不传 默认是Node+id;
+              node_s.setLocation(parseInt(Math.random() * 600), parseInt(Math.random() * 400));  //设置节点位置
+              node_arr.push(node_s);                    //插入数组
+            }
+            Stage.add(node_arr);                        //添加到舞台里（可以一个一个添加  建议添加多个时用数组 效率高）
+          </pre>
+        </div>
+        <h2 id="3">简单的配置:</h2>
+        <div>
+          <h3>全局主题配置</h3>
+          <p>通过一下代码可以，配置全插件的主题样式，有关节点的配置等</p>
+          <pre class="code-js">
+          var json={
+                type: 'rect',
+                width: 150,
+                height: 30,
+                strokeStyle: '#0099cc',
+                lineWidth: 1,
+                fillStyle: '#fff',
+                fillArcStyle: '#fff',
+                hoverFillArcStyle: '#fff',
+                strokeArcStyle: '#ccc',
+                hoverStrokeArcStyle: '#81e874',
+                textColor: '#333',
+                x: 0,
+                y: 0,
+                arcWidth: 2,
+                arclineWidth: 6,
+                hoverArcWidth: 4,
+                hoverArclineWidth: 8,
+                centerText: '[绘图]',
+                centerTextColor: '#333',
+                lineStrokeStyle: '#0099cc',
+                lineLineWidth: 1,
+                hoverLineStrokeStyle: '#21baed',
+                hoverLineLineWidth: 2,
+              }
+          drawTop.setTheme(json);
+        </pre>
+          <h3>节点配置</h3>
+          <p>通过一下代码可以，配置Node节点样式，可以不填写默认先读取主题配置在读取默认配置</p>
+          <pre class="code-js">
+          var json={
+                type: 'rect',
+                width: 150,
+                height: 30,
+                strokeStyle: '#0099cc',
+                lineWidth: 1,
+                fillStyle: '#fff',
+                fillArcStyle: '#fff',
+                hoverFillArcStyle: '#fff',
+                strokeArcStyle: '#ccc',
+                hoverStrokeArcStyle: '#81e874',
+                textColor: '#333',
+                x: 0,
+                y: 0,
+                arcWidth: 2,
+                arclineWidth: 6,
+                hoverArcWidth: 4,
+                hoverArclineWidth: 8,
+                centerText: '[绘图]',
+                centerTextColor: '#333',
+                lineStrokeStyle: '#0099cc',
+                lineLineWidth: 1,
+                hoverLineStrokeStyle: '#21baed',
+                hoverLineLineWidth: 2,
+              }
+          var Node = new drawTop.Node('text',json);
+          Stage.add(Node);
+        </pre>
+        </div>
+      </div>
+      <div class="three" id="9">
+        <h1 style="padding-top:60px;">Work Function</h1>
+        <h2 id="6">Array.Map(function:fn)</h2>
+        <div class="text-content">
+          <p>fn(time , index)</p>
+          <p>方法返回，item 遍历的当前节点，index遍历的节点的角标</p>
+          <p>遍历数组中的全部元素，可传入function进行处理</p>
+          <p>例：</p>
+          <pre class="code-js">
+              var arr=[1,2,3,4];
+              var newArr=arr.Map(function(item,index){
+                return item+=2;
+              });
+              console.log(newArr);       //结果是[3,4,5,6];
+          </pre>
+        </div>
+        <h3 id="7">Array.Nrepetitive()</h3>
+        <div class="text-content">
+          <p>drawTop.setTheme(Object: json)</p>
+          <p>数组去重方法</p>
+        </div>
+      </div>
+      <div class="two" id="10">
+        <h1 style="padding-top:60px;">DrawTopology API</h1>
+        <h2 id="4">drawTop</h2>
+        <div class="text-content">
+          <p>核心主方法 下面有各种实例化的方法</p>
+        </div>
+        <h3 id="5">drawTop.setTheme(Object: json)</h3>
+        <div class="text-content">
+          <p>drawTop.setTheme(Object: json)</p>
+          <p>可以设置整体的主题 参数是一个json格式的 对象</p>
+          <pre class="code-js">
+             var json={
+                type: 'rect',               //默认图形类型
+                width: 150,                 //默认图形宽度
+                height: 30,                 //默认图形高度
+                strokeStyle: '#0099cc',     //边线颜色
+                lineWidth: 1,               //边线大小
+                fillStyle: '#fff',          //填充颜色
+                fillArcStyle: '#fff',       //连接组件填充颜色
+                hoverFillArcStyle: '#fff',  //连接组件Hover颜色
+                strokeArcStyle: '#ccc',     //连接组件边框颜色
+                hoverStrokeArcStyle: '#81e874',//连接组件边框Hover颜色
+                textColor: '#333',          //图块下标题颜色
+                x: 0,                       //图块默认X坐标
+                y: 0,                       //图块默认Y坐标
+                arcWidth: 2,                //连接组件大小
+                arclineWidth: 6,            //连接组件线宽
+                hoverArcWidth: 4,           //连接组件Hover大小
+                hoverArclineWidth: 8,       //连接组件Hover线宽
+                centerText: '[绘图]',       //图块中心文字
+                centerTextColor: '#333',    //图块中心文字颜色
+                lineStrokeStyle: '#0099cc', //连接线颜色
+                lineLineWidth: 1,           //连接线线宽
+                hoverLineStrokeStyle: '#21baed',//连接线线颜色
+                hoverLineLineWidth: 2        //连接线Hover线宽
+              }
+          </pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>
+<script type="text/javascript">
+  var Stage = new drawTop.Stage({
+    id:'canvasbox',
+    Menu:{
+      btn:{
+        line:[{
+          name:'删除直线',
+          className:'No_line',
+          click:function(e){
+            e.Stage.clear(e.triggerDrawNode);
+          }
+        }],
+        rect:[{
+          name:'删除标签',
+          className:'No_node',
+          click:function(e){
+            e.Stage.clear(e.triggerDrawNode);
+          }
+        },{
+          name:'查看详情',
+          className:'showInfo',
+          click:function(e){
+            console.log(e);
+          }
+        }],
+      }
+    },
+    doLink:{
+      doLinkJudge:function(e){
+        console.log(e);
+        return true;
+      }
+    }
+  });
+  var node_arr = [];
+  var color=["#f9be00","#7ab51d","#9e0382","#0087ea","#01b2e4","#64e571","#d9d60b","#55198a","#942128","#90495a"];
+  for (var i = 0; i < 10; i++) {
+    var node_s = new drawTop.Node('Node'+i,{strokeStyle:color[i%10],id:i,fillStyle:color[i%10],centerTextColor:'#fff',width:60,
+      // LinePoint:{
+      //   place:{
+      //     top:true,
+      //     right:true,
+      //     left:true,
+      //     bottom:true,
+      //   },
+      //   PointTo:{
+      //     top:'bottom',
+      //     right:'bottom',
+      //     left:'bottom',
+      //     bottom:'bottom'
+      //   }
+      // }
+  });
+    node_s.setLocation(62*i,30*i);
+    node_arr.push(node_s);
+  }
+  for (var j = 0; j < 9; j++) {
+    var node_s = new drawTop.Link(node_arr[j],node_arr[j+1],{lineStrokeStyle:color[j%10],
+      arrows:{
+          show:true,
+      }
+    });
+    node_arr.push(node_s);
+  }
+  Stage.add(node_arr);
+  var node=new drawTop.Node({
+    centerText:'且',
+    text:' ',
+    width:60,
+    height:30,
+    LinePoint:{
+      place:{
+        top:true,
+        right:true,
+        left:true,
+        bottom:true,
+      },
+      PointTo:{
+        top:'left',
+        right:'bottom',
+        left:'right',
+        bottom:'top'
+      },
+      link:{
+        arrows:{
+            show:false,
+        }
+      }
+    }
+  });
+  var node2=new drawTop.Node({
+    centerText:'或',
+    text:' ',
+    width:60,
+    height:30,
+    // LinePoint:{
+    //   place:{
+    //     top:true,
+    //     right:true,
+    //     left:true,
+    //     bottom:true,
+    //   },
+    //   PointTo:{
+    //     top:'left',
+    //     right:'bottom',
+    //     left:'right',
+    //     bottom:'top'
+    //   }
+    // }
+  });
+  node2.addEvent('dblclick',function(e){
+    console.log(e);
+  });
+  Stage.add([node,node2]);
+  node.setLocation(200,200);
+  node2.setLocation(200,300);
+  var data=Stage.getNodeData();
+</script>
